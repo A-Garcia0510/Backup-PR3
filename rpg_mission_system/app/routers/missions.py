@@ -11,7 +11,7 @@ from app.schemas.mission import MissionCreate, CharacterMission as CharacterMiss
 from app.tda.queue import MissionQueue
 
 router = APIRouter(
-    prefix="/missions",
+    prefix="/misiones",  # Cambiado a español según el PDF
     tags=["missions"]
 )
 
@@ -42,6 +42,7 @@ def get_mission(mission_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Mission not found")
     return mission
 
+# Mantener los endpoints adicionales para compatibilidad
 @router.post("/{mission_id}/accept", response_model=CharacterMissionSchema)
 def accept_mission(mission_id: int, character_id: int, db: Session = Depends(get_db)):
     """Accept a mission for a character (add to queue)"""

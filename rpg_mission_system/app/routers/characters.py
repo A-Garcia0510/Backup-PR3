@@ -5,12 +5,14 @@ from typing import List
 from app.database import get_db
 from app.models.character import Character
 from app.models.character_mission import CharacterMission
+from app.models.mission import Mission
 from app.schemas.character import Character as CharacterSchema
 from app.schemas.character import CharacterCreate, CharacterDetail
-from app.schemas.mission import MissionQueueItem
+from app.schemas.mission import MissionQueueItem, CharacterMission as CharacterMissionSchema
+from app.tda.queue import MissionQueue
 
 router = APIRouter(
-    prefix="/characters",
+    prefix="/personajes",  # Cambiado a español según el PDF
     tags=["characters"]
 )
 
@@ -52,7 +54,7 @@ def get_character(character_id: int, db: Session = Depends(get_db)):
     
     return result
 
-@router.get("/{character_id}/missions", response_model=List[MissionQueueItem])
+@router.get("/{character_id}/misiones", response_model=List[MissionQueueItem])
 def get_character_missions(character_id: int, db: Session = Depends(get_db)):
     """Get all missions for a character in queue order"""
     character = db.query(Character).filter(Character.id == character_id).first()
@@ -79,3 +81,70 @@ def get_character_missions(character_id: int, db: Session = Depends(get_db)):
     ).order_by(CharacterMission.queue_position.asc()).all()
     
     return missions
+
+# Nuevo endpoint para aceptar misiones según el formato especificado
+@router.post("/{character_id}/misiones/{mission_id}", response_model=CharacterMissionSchema)
+def accept_mission(character_id: int, mission_id: int, db: Session = Depends(get_db)):
+    """Accept a mission for a character (add to queue)"""
+    # Check if mission exists
+    mission = db.query(Mission).filter(Mission.id == mission_id).first()
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    
+    # Check if character exists
+    character = db.query(Character).filter(Character.id == character_id).first()
+    if not character:
+        raise HTTPException(status_code=404, detail="Character not found")
+    
+    # Check if mission is already accepted by this character
+    existing = db.query(CharacterMission).filter(
+        CharacterMission.character_id == character_id,
+        CharacterMission.mission_id == mission_id,
+        CharacterMission.status.in_(["pending", "in_progress"])
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Mission already accepted")
+    
+    # Use the queue to add the mission
+    mission_queue = MissionQueue(db, character_id)
+    character_mission = mission_queue.enqueue(mission_id)
+    
+    return character_mission
+
+# Nuevo endpoint para completar la misión actual según el formato especificado
+@router.post("/{character_id}/completar", response_model=CharacterMissionSchema)
+def complete_current_mission(character_id: int, db: Session = Depends(get_db)):
+    """Complete the current mission in the queue and award XP"""
+    # Check if character exists
+    character = db.query(Character).filter(Character.id == character_id).first()
+    if not character:
+        raise HTTPException(status_code=404, detail="Character not found")
+    
+    # Use the queue to get the next mission
+    mission_queue = MissionQueue(db, character_id)
+    current_mission = mission_queue.first()
+    
+    if not current_mission:
+        raise HTTPException(status_code=404, detail="No missions in queue")
+    
+    if current_mission.status != "in_progress":
+        # Start the mission first if it's not already in progress
+        current_mission.status = "in_progress"
+        db.commit()
+    
+    # Complete the mission
+    completed_mission = mission_queue.dequeue()
+    
+    # Award XP to character
+    mission = db.query(Mission).filter(Mission.id == current_mission.mission_id).first()
+    character.experience += mission.xp_reward
+    
+    # Level up if enough XP (simple leveling system)
+    xp_for_next_level = character.level * 100
+    if character.experience >= xp_for_next_level:
+        character.level += 1
+    
+    db.commit()
+    
+    return completed_mission

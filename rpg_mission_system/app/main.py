@@ -8,8 +8,8 @@ Base.metadata.create_all(bind=engine)
 
 # Create FastAPI app
 app = FastAPI(
-    title="RPG Mission System",
-    description="A system for managing RPG game missions using a queue (FIFO) data structure",
+    title="Sistema de Misiones RPG",  # Título en español
+    description="Sistema para gestionar misiones en juegos RPG usando una estructura de datos Cola (FIFO)",
     version="0.1.0"
 )
 
@@ -29,6 +29,6 @@ app.include_router(missions.router)
 @app.get("/")
 def read_root():
     return {
-        "message": "Welcome to the RPG Mission System API",
+        "message": "Bienvenido al Sistema de Misiones RPG",
         "docs": "/docs"
     }
