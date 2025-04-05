@@ -1,0 +1,117 @@
+Contexto del Proyecto
+Estás desarrollando un sistema para gestionar misiones en juegos RPG donde:
+
+Las misiones secundarias se manejan como una cola (FIFO - First In, First Out)
+Los personajes pueden aceptar múltiples misiones que deben completarse en el orden en que fueron aceptadas
+Se requiere persistencia de datos utilizando SQLAlchemy ORM
+Se necesita implementar una API REST con FastAPI para interactuar con el sistema
+El objetivo es aplicar el TDA Cola en un contexto práctico, integrándolo con base de datos
+
+Estructura de Directorios
+Copiarrpg_mission_system/
+│
+├── app/
+│   ├── __init__.py
+│   ├── main.py              # Punto de entrada de la aplicación FastAPI
+│   ├── database.py          # Configuración de la conexión a la BD
+│   ├── models/              # Modelos SQLAlchemy
+│   │   ├── __init__.py
+│   │   ├── character.py     # Modelo de Personaje
+│   │   ├── mission.py       # Modelo de Misión
+│   │   └── character_mission.py  # Tabla de relación entre personajes y misiones
+│   ├── schemas/             # Esquemas Pydantic para la API
+│   │   ├── __init__.py
+│   │   ├── character.py     # Esquema de Personaje
+│   │   └── mission.py       # Esquema de Misión
+│   ├── routers/             # Rutas de la API
+│   │   ├── __init__.py
+│   │   ├── characters.py    # Endpoints de personajes
+│   │   └── missions.py      # Endpoints de misiones
+│   └── tda/                 # Implementación de TDA Cola
+│       ├── __init__.py
+│       └── queue.py         # Clase Cola
+│
+├── tests/                   # Pruebas unitarias
+│   ├── __init__.py
+│   ├── test_queue.py        # Pruebas de la cola
+│   └── test_api.py          # Pruebas de la API
+│
+├── .gitignore
+├── requirements.txt         # Dependencias del proyecto
+└── README.md                # Documentación del proyecto
+Archivos Principales y su Funcionalidad
+1. app/main.py
+
+Función: Punto de entrada de la aplicación FastAPI.
+Contenido: Configuración de la API, inclusión de routers y middleware.
+
+2. app/database.py
+
+Función: Configuración de la conexión a la base de datos.
+Contenido: Creación del motor SQLAlchemy, sesión y base declarativa.
+
+3. app/models/character.py
+
+Función: Define el modelo SQLAlchemy para los personajes.
+Contenido: Clase Character con atributos como id, nombre, nivel, experiencia.
+
+4. app/models/mission.py
+
+Función: Define el modelo SQLAlchemy para las misiones.
+Contenido: Clase Mission con atributos como id, título, descripción, recompensa XP.
+
+5. app/models/character_mission.py
+
+Función: Define la relación muchos a muchos entre personajes y misiones.
+Contenido: Tabla de asociación con información adicional como orden de aceptación, estado.
+
+6. app/tda/queue.py
+
+Función: Implementación del TDA Cola adaptado para las misiones de RPG.
+Contenido: Clase Queue con métodos enqueue(), dequeue(), first(), is_empty(), size().
+
+7. app/routers/characters.py
+
+Función: Define los endpoints relacionados con personajes.
+Contenido: Rutas para crear personajes, obtener información, etc.
+
+8. app/routers/missions.py
+
+Función: Define los endpoints relacionados con misiones.
+Contenido: Rutas para crear misiones, aceptar, completar, etc.
+
+9. app/schemas/character.py y app/schemas/mission.py
+
+Función: Define esquemas Pydantic para validación de datos en la API.
+Contenido: Modelos de datos para requests y responses.
+
+10. requirements.txt
+
+Función: Lista las dependencias del proyecto.
+Contenido: fastapi, uvicorn, sqlalchemy, etc.
+
+Implementación de TDA Cola
+Para la implementación de la Cola (Queue), tendremos dos opciones:
+
+Implementación con Lista en Memoria:
+
+Una cola tradicional que maneja objetos en memoria
+Se sincroniza con la base de datos cuando es necesario
+
+
+Implementación con SQLAlchemy:
+
+La cola se representa directamente en la tabla de asociación
+Las operaciones enqueue/dequeue modifican registros en la BD
+
+
+
+La segunda opción parece más adecuada para este proyecto, ya que nos permite aprovechar al máximo el ORM y garantizar la persistencia de datos.
+Plan de Implementación
+
+Configurar el entorno y dependencias
+Crear los modelos SQLAlchemy
+Implementar el TDA Cola integrado con SQLAlchemy
+Desarrollar los endpoints de la API
+Escribir pruebas unitarias
+Documentar el código y crear un README detallado

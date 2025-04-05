@@ -2,21 +2,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# SQLite connection URL
 SQLALCHEMY_DATABASE_URL = "sqlite:///./rpg_missions.db"
+# Para PostgreSQL sería algo como:
+# SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
 
-# Create SQLAlchemy engine
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
-
-# Create sessionmaker
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Create base class for models
 Base = declarative_base()
 
-# Dependency to get DB session
+# Dependency
 def get_db():
     db = SessionLocal()
     try:
