@@ -61,7 +61,7 @@ def get_character_missions(character_id: int, db: Session = Depends(get_db)):
     if not character:
         raise HTTPException(status_code=404, detail="Character not found")
     
-    # Get all missions with join to get mission details
+    # Get all missions with join to get mission details - CORREGIDO
     missions = db.query(
         CharacterMission.id,
         CharacterMission.status,
@@ -69,13 +69,15 @@ def get_character_missions(character_id: int, db: Session = Depends(get_db)):
         CharacterMission.accepted_at,
         Character.id.label("character_id"),
         Character.name.label("character_name"),
-        db.model.Mission.id.label("mission_id"),
-        db.model.Mission.title,
-        db.model.Mission.description,
-        db.model.Mission.xp_reward,
-        db.model.Mission.difficulty
+        Mission.id.label("mission_id"),
+        Mission.title,
+        Mission.description,
+        Mission.xp_reward,
+        Mission.difficulty
     ).join(
-        db.model.Mission, CharacterMission.mission_id == db.model.Mission.id
+        Mission, CharacterMission.mission_id == Mission.id
+    ).join(
+        Character, CharacterMission.character_id == Character.id
     ).filter(
         CharacterMission.character_id == character_id
     ).order_by(CharacterMission.queue_position.asc()).all()

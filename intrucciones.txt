@@ -8,7 +8,7 @@ Se necesita implementar una API REST con FastAPI para interactuar con el sistema
 El objetivo es aplicar el TDA Cola en un contexto práctico, integrándolo con base de datos
 
 Estructura de Directorios
-Copiarrpg_mission_system/
+rpg_mission_system/
 │
 ├── app/
 │   ├── __init__.py

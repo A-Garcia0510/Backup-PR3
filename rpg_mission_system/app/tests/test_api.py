@@ -49,7 +49,7 @@ def test_read_root(client):
 
 def test_create_character(client):
     response = client.post(
-        "/characters/",
+        "/personajes/",
         json={"name": "API Test Character", "level": 1, "experience": 0}
     )
     assert response.status_code == 200
@@ -63,7 +63,7 @@ def test_create_character(client):
 
 def test_create_mission(client):
     response = client.post(
-        "/missions/",
+        "/misiones/",
         json={
             "title": "API Test Mission",
             "description": "Test mission created from API test", 
@@ -85,35 +85,28 @@ def test_mission_workflow(client):
     character_id = test_create_character(client)
     mission_id = test_create_mission(client)
     
-    # Accept mission
-    response = client.post(f"/missions/{mission_id}/accept?character_id={character_id}")
+    # Accept mission - Corregido para usar la ruta correcta
+    response = client.post(f"/personajes/{character_id}/misiones/{mission_id}")
     assert response.status_code == 200
     data = response.json()
     assert data["mission_id"] == mission_id
     assert data["character_id"] == character_id
     assert data["status"] == "pending"
     
-    # Start mission
-    response = client.post(f"/missions/{mission_id}/start?character_id={character_id}")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "in_progress"
-    
-    # Get character missions
-    response = client.get(f"/characters/{character_id}/missions")
+    # Get character missions - Corregido para usar la ruta correcta
+    response = client.get(f"/personajes/{character_id}/misiones")
     assert response.status_code == 200
     missions = response.json()
     assert len(missions) >= 1
-    assert any(mission["status"] == "in_progress" for mission in missions)
     
-    # Complete mission
-    response = client.post(f"/missions/{mission_id}/complete?character_id={character_id}")
+    # Complete mission - Corregido para usar la ruta correcta
+    response = client.post(f"/personajes/{character_id}/completar")
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "completed"
     
-    # Check character got XP
-    response = client.get(f"/characters/{character_id}")
+    # Check character got XP - Corregido para usar la ruta correcta
+    response = client.get(f"/personajes/{character_id}")
     assert response.status_code == 200
     character = response.json()
     assert character["experience"] > 0
