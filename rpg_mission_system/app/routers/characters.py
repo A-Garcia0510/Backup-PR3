@@ -43,16 +43,26 @@ def get_character(character_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Character not found")
     
     # Get mission counts for the character details
-    result = CharacterDetail.from_orm(character)
-    result.mission_count = db.query(CharacterMission).filter(
-        CharacterMission.character_id == character_id
-    ).count()
-    result.pending_missions = db.query(CharacterMission).filter(
+    pending_missions = db.query(CharacterMission).filter(
         CharacterMission.character_id == character_id,
         CharacterMission.status.in_(["pending", "in_progress"])
     ).count()
     
-    return result
+    mission_count = db.query(CharacterMission).filter(
+        CharacterMission.character_id == character_id
+    ).count()
+    
+    # Crear manualmente el objeto de respuesta para asegurar que todos los campos estén presentes
+    response = {
+        "id": character.id,
+        "name": character.name,
+        "level": character.level,
+        "experience": character.experience,
+        "mission_count": mission_count,
+        "pending_missions": pending_missions
+    }
+    
+    return response
 
 @router.get("/{character_id}/misiones", response_model=List[MissionQueueItem])
 def get_character_missions(character_id: int, db: Session = Depends(get_db)):
@@ -61,7 +71,7 @@ def get_character_missions(character_id: int, db: Session = Depends(get_db)):
     if not character:
         raise HTTPException(status_code=404, detail="Character not found")
     
-    # Get all missions with join to get mission details - CORREGIDO
+    # Get all missions with join to get mission details
     missions = db.query(
         CharacterMission.id,
         CharacterMission.status,
@@ -84,7 +94,6 @@ def get_character_missions(character_id: int, db: Session = Depends(get_db)):
     
     return missions
 
-# Nuevo endpoint para aceptar misiones según el formato especificado
 @router.post("/{character_id}/misiones/{mission_id}", response_model=CharacterMissionSchema)
 def accept_mission(character_id: int, mission_id: int, db: Session = Depends(get_db)):
     """Accept a mission for a character (add to queue)"""
@@ -114,7 +123,6 @@ def accept_mission(character_id: int, mission_id: int, db: Session = Depends(get
     
     return character_mission
 
-# Nuevo endpoint para completar la misión actual según el formato especificado
 @router.post("/{character_id}/completar", response_model=CharacterMissionSchema)
 def complete_current_mission(character_id: int, db: Session = Depends(get_db)):
     """Complete the current mission in the queue and award XP"""
@@ -139,7 +147,7 @@ def complete_current_mission(character_id: int, db: Session = Depends(get_db)):
     completed_mission = mission_queue.dequeue()
     
     # Award XP to character
-    mission = db.query(Mission).filter(Mission.id == current_mission.mission_id).first()
+    mission = db.query(Mission).filter(Mission.id == completed_mission.mission_id).first()
     character.experience += mission.xp_reward
     
     # Level up if enough XP (simple leveling system)

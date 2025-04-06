@@ -62,6 +62,8 @@ uvicorn app.main:app --reload
 ```
 
 El servidor debería iniciarse en `http://127.0.0.1:8000`.
+Swanger---
+http://127.0.0.1:8000/docs
 
 
 ### Paso 4: Probar la funcionalidad
@@ -146,9 +148,5 @@ El proyecto incluye pruebas unitarias y de integración:
 
 ```bash
 # Ejecutar todas las pruebas
-pytest rpg_mission_system/app/tests/
+pytest rpg_mission_system/app/tests
 
-# O ejecutar pruebas específicas
-pytest app/tests/test_queue.py
-pytest app/tests/test_api.py
-```
