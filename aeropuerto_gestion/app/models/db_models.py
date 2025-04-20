@@ -1,9 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 from app.models.vuelo import EstadoVuelo, TipoVuelo
-
-Base = declarative_base()
+from app.database.db import Base  # Importar Base desde db.py en lugar de redefinirla
 
 class VueloModel(Base):
     """Modelo SQLAlchemy para la tabla de vuelos."""
